@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Monster Quiz</title>
+<style>
+:root{--bg1:#ffe3f1;--bg2:#d8ecff;--ink:#3b2f5c;--pink:#ff7eb6;--blue:#6ab7ff;--green:#5fd49a;--red:#ff7a7a;--yellow:#ffd966;--card:#ffffffcc}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,var(--bg1),var(--bg2));overflow-x:hidden}
+#app{max-width:480px;margin:0 auto;min-height:100%;padding:16px 16px 28px;display:flex;flex-direction:column}
+h1{font-size:40px;margin:6px 0 0;text-align:center;line-height:1;letter-spacing:1px}
+h1 span{color:var(--pink)}
+h2{text-align:center;margin:6px 0 14px}
+.sub{text-align:center;opacity:.7;margin:6px 0 10px}
+.btn{display:block;width:100%;border:0;border-radius:20px;padding:15px 18px;font:inherit;font-size:19px;font-weight:700;color:#fff;background:var(--pink);box-shadow:0 5px 0 #d9568f;margin:12px 0;cursor:pointer}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #d9568f}
+.btn.blue{background:var(--blue);box-shadow:0 5px 0 #3f8fd6}
+.btn.blue:active{box-shadow:0 1px 0 #3f8fd6}
+.btn.gray{background:#b9b3cc;box-shadow:0 5px 0 #8f89a6}
+.btn.small{font-size:15px;padding:10px;width:auto;display:inline-block;margin:0}
+.card{background:var(--card);border-radius:22px;padding:16px;box-shadow:0 6px 18px #6a4c9322}
+.mascot{display:flex;justify-content:center;margin:14px 0 4px;animation:bob 2.4s ease-in-out infinite}
+.mascot svg{width:170px;height:170px}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.hearts{font-size:22px;letter-spacing:2px}
+.bar{height:12px;background:#fff;border-radius:99px;overflow:hidden;margin:6px 0 14px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--yellow));transition:width .4s}
+.cat{display:inline-block;background:var(--yellow);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:700}
+.q{font-size:21px;font-weight:700;margin:12px 0;line-height:1.3}
+.img{font-size:92px;text-align:center;margin:6px 0}
+.ans{display:block;width:100%;text-align:left;border:3px solid #fff;border-radius:18px;padding:13px 15px;font:inherit;font-size:18px;font-weight:600;color:var(--ink);background:#fff;margin:9px 0;cursor:pointer;box-shadow:0 3px 0 #cfc6e6}
+.ans.tf{text-align:center;font-size:22px}
+.ans.good{background:#c9f5df;border-color:var(--green)}
+.ans.bad{background:#ffd5d5;border-color:var(--red)}
+.ans:disabled{opacity:1}
+.fb{min-height:24px;text-align:center;font-weight:700;margin-top:6px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.lvl{aspect-ratio:1;border:0;border-radius:22px;font:inherit;font-size:26px;font-weight:800;color:#fff;background:var(--blue);box-shadow:0 5px 0 #3f8fd6;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
+.lvl small{font-size:14px;margin-top:2px}
+.lvl.locked{background:#c9c3dc;box-shadow:0 5px 0 #a39dbb;cursor:default}
+.mon{text-align:center;padding:10px}
+.mon svg{width:90px;height:90px}
+.mon.off svg{filter:grayscale(1) brightness(.4);opacity:.55}
+.mon b{display:block;font-size:14px}
+.big{display:flex;justify-content:center}.big svg{width:150px;height:150px}
+.pop{animation:pop .5s}
+@keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.soon{opacity:.6;font-size:14px;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ---------- Monstres (dessinés en SVG, pas d'emoji) ---------- */
+const MONSTERS=[
+ {n:"Bobo",c:"#8ee0b0",d:"#4fb67f",f:"ears"},
+ {n:"Pompon",c:"#ffb3d1",d:"#e5709f",f:"antenna"},
+ {n:"Cyclo",c:"#ffd966",d:"#e0b030",f:"cyclops"},
+ {n:"Bleuet",c:"#8ec9ff",d:"#4f95d6",f:"horns"},
+ {n:"Violette",c:"#c9a8ff",d:"#8f68d6",f:"tuft"},
+ {n:"Flamme",c:"#ffa98a",d:"#e0704a",f:"spikes"}
+];
+function monster(i,mood){
+ const m=MONSTERS[i%MONSTERS.length],c=m.c,d=m.d;let top="",eyes="";
+ if(m.f==="ears")top=`<circle cx="32" cy="30" r="13" fill="${c}" stroke="${d}" stroke-width="4"/><circle cx="88" cy="30" r="13" fill="${c}" stroke="${d}" stroke-width="4"/>`;
+ if(m.f==="antenna")top=`<path d="M60 28 L60 10" stroke="${d}" stroke-width="4"/><circle cx="60" cy="9" r="7" fill="#fff" stroke="${d}" stroke-width="4"/>`;
+ if(m.f==="horns")top=`<path d="M34 34 L26 10 L48 26Z M86 34 L94 10 L72 26Z" fill="#fff" stroke="${d}" stroke-width="4" stroke-linejoin="round"/>`;
+ if(m.f==="tuft")top=`<path d="M60 28 Q48 6 60 4 Q72 6 60 28Z" fill="${d}"/><path d="M52 28 Q36 14 44 8 Q52 10 52 28Z M68 28 Q84 14 76 8 Q68 10 68 28Z" fill="${d}"/>`;
+ if(m.f==="spikes")top=`<path d="M30 34 L36 14 L46 30 L60 10 L74 30 L84 14 L90 34Z" fill="${d}"/>`;
+ const mouth=mood==="sad"?`<path d="M46 86 Q60 74 74 86" fill="none" stroke="#3b2f5c" stroke-width="4" stroke-linecap="round"/>`:`<path d="M44 78 Q60 96 76 78 Q60 84 44 78Z" fill="#fff" stroke="#3b2f5c" stroke-width="3.5" stroke-linejoin="round"/>`;
+ const eye=(x)=>`<circle cx="${x}" cy="62" r="11" fill="#fff"/><circle cx="${x+(mood==="sad"?0:2)}" cy="${mood==="sad"?65:63}" r="5.5" fill="#3b2f5c"/><circle cx="${x+4}" cy="59" r="2" fill="#fff"/>`;
+ if(m.f==="cyclops")eyes=`<circle cx="60" cy="58" r="17" fill="#fff"/><circle cx="62" cy="60" r="8" fill="#3b2f5c"/><circle cx="66" cy="55" r="3" fill="#fff"/>`;
+ else eyes=eye(44)+eye(76);
+ return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">${top}<ellipse cx="60" cy="70" rx="42" ry="40" fill="${c}" stroke="${d}" stroke-width="4"/><ellipse cx="38" cy="84" rx="7" ry="4.5" fill="#ff8fb5" opacity=".55"/><ellipse cx="82" cy="84" rx="7" ry="4.5" fill="#ff8fb5" opacity=".55"/>${eyes}${m.f==="cyclops"?mouth.replace(/ 78/g," 82").replace(/ 96/g," 100"):mouth}<ellipse cx="42" cy="108" rx="11" ry="6" fill="${d}"/><ellipse cx="78" cy="108" rx="11" ry="6" fill="${d}"/></svg>`;
+}
+
+/* ---------- Questions (type: tf = vrai/faux, qcm = 4 choix, img = image + 4 choix) ---------- */
+const TF=["Vrai","Faux"];
+const LEVELS=[
+ {name:"Petit monstre",q:[
+  {t:"img",c:"Sciences et nature",q:"Quel est cet animal ?",img:"🐘",a:["Éléphant","Girafe","Hippopotame","Rhinocéros"],ok:0},
+  {t:"tf",c:"Sciences et nature",q:"La Terre tourne autour du Soleil.",a:TF,ok:0},
+  {t:"qcm",c:"Histoire et géographie",q:"Quelle est la capitale de la France ?",a:["Paris","Lyon","Marseille","Lille"],ok:0},
+  {t:"img",c:"Sport et jeux vidéo",q:"Quel sport représente cette image ?",img:"⚽",a:["Football","Tennis","Basket","Rugby"],ok:0},
+  {t:"qcm",c:"Sciences et nature",q:"Combien y a-t-il de couleurs dans l'arc-en-ciel ?",a:["5","6","7","8"],ok:2}]},
+ {name:"Monstre curieux",q:[
+  {t:"tf",c:"Sciences et nature",q:"Le requin est un mammifère.",a:TF,ok:1},
+  {t:"qcm",c:"Histoire et géographie",q:"Quel est le plus grand océan du monde ?",a:["Atlantique","Pacifique","Indien","Arctique"],ok:1},
+  {t:"img",c:"Cinéma, musique, arts",q:"Quel instrument de musique est-ce ?",img:"🎸",a:["Violon","Piano","Guitare","Trompette"],ok:2},
+  {t:"qcm",c:"Cinéma, musique, arts",q:"Qui a peint la Joconde ?",a:["Picasso","Léonard de Vinci","Van Gogh","Monet"],ok:1},
+  {t:"tf",c:"Sport et jeux vidéo",q:"Mario est un personnage créé par Nintendo.",a:TF,ok:0}]},
+ {name:"Monstre malin",q:[
+  {t:"qcm",c:"Sport et jeux vidéo",q:"Combien de joueurs une équipe de football a-t-elle sur le terrain ?",a:["9","10","11","12"],ok:2},
+  {t:"tf",c:"Histoire et géographie",q:"La Grande Muraille de Chine est visible à l'œil nu depuis la Lune.",a:TF,ok:1},
+  {t:"img",c:"Sciences et nature",q:"Quelle planète est-ce ?",img:"🪐",a:["Jupiter","Mars","Neptune","Saturne"],ok:3},
+  {t:"qcm",c:"Histoire et géographie",q:"Quel est le plus long fleuve d'Europe ?",a:["La Seine","Le Danube","La Volga","Le Rhin"],ok:2},
+  {t:"qcm",c:"Histoire et géographie",q:"En quelle année l'homme a-t-il marché sur la Lune pour la première fois ?",a:["1959","1969","1979","1989"],ok:1}]},
+ {name:"Grand monstre",q:[
+  {t:"tf",c:"Sciences et nature",q:"L'eau bout à 100 °C au niveau de la mer.",a:TF,ok:0},
+  {t:"qcm",c:"Sciences et nature",q:"Quel est le symbole chimique de l'or ?",a:["Ag","Au","Or","Fe"],ok:1},
+  {t:"img",c:"Histoire et géographie",q:"Quel monument est-ce ?",img:"🗽",a:["Le Sphinx","Big Ben","Statue de la Liberté","Christ Rédempteur"],ok:2},
+  {t:"qcm",c:"Cinéma, musique, arts",q:"Qui a écrit « Les Misérables » ?",a:["Molière","Victor Hugo","Émile Zola","Balzac"],ok:1},
+  {t:"qcm",c:"Sciences et nature",q:"Combien d'os a un adulte humain ?",a:["106","206","306","412"],ok:1}]},
+ {name:"Roi des monstres",q:[
+  {t:"tf",c:"Sciences et nature",q:"Les chauves-souris sont aveugles.",a:TF,ok:1},
+  {t:"qcm",c:"Histoire et géographie",q:"Quelle est la capitale de l'Australie ?",a:["Sydney","Melbourne","Canberra","Perth"],ok:2},
+  {t:"img",c:"Sciences et nature",q:"Quel animal est-ce ?",img:"🐙",a:["Méduse","Pieuvre","Crabe","Étoile de mer"],ok:1},
+  {t:"qcm",c:"Sciences et nature",q:"Quelle est la plus petite planète du système solaire ?",a:["Mars","Vénus","Mercure","Pluton"],ok:2},
+  {t:"tf",c:"Sport et jeux vidéo",q:"Le Brésil a gagné plus de Coupes du monde de football que l'Allemagne.",a:TF,ok:0}]}
+];
+
+/* ---------- Sauvegarde locale (Supabase viendra ensuite) ---------- */
+const KEY="monsterquiz_v1";
+let save=JSON.parse(localStorage.getItem(KEY)||"null")||{unlocked:1,stars:{},mons:[0]};
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(save))}catch(e){}};
+let G=null;const $=document.getElementById("app");
+
+function home(){
+ $.innerHTML=`<h1>Monster <span>Quiz</span></h1><div class="sub">Réponds, gagne des étoiles et collectionne les monstres !</div>
+ <div class="mascot">${monster(0)}</div>
+ <button class="btn" onclick="levels()">Jouer</button>
+ <button class="btn blue" onclick="collection()">Ma collection (${save.mons.length}/${MONSTERS.length})</button>
+ <div class="soon">Bientôt : Survie · Contre la montre · Question du jour · Mode en ligne</div>`;
+}
+function levels(){
+ let h=`<div class="top"><button class="btn small gray" onclick="home()">← Retour</button></div><h2>Choisis un niveau</h2><div class="grid">`;
+ LEVELS.forEach((l,i)=>{
+  const lock=i>=save.unlocked,s=save.stars[i]||0;
+  h+=lock?`<div class="lvl locked">🔒</div>`:`<button class="lvl" onclick="start(${i})">${i+1}<small>${"★".repeat(s)}${"☆".repeat(3-s)}</small></button>`;
+ });
+ $.innerHTML=h+`</div><div class="sub" style="margin-top:18px">Tu as 3 cœurs par niveau. Chaque niveau réussi te donne un nouveau monstre !</div>`;
+}
+function start(i){G={l:i,i:0,lives:3,score:0,done:false};question();}
+function question(){
+ const L=LEVELS[G.l],Q=L.q[G.i];
+ let h=`<div class="top"><button class="btn small gray" onclick="levels()">✕</button><span class="hearts">${"❤️".repeat(G.lives)}${"🤍".repeat(3-G.lives)}</span></div>
+ <div class="bar"><i style="width:${G.i/L.q.length*100}%"></i></div>
+ <div class="card"><span class="cat">${Q.c}</span><div class="q">${Q.q}</div>${Q.img?`<div class="img">${Q.img}</div>`:""}`;
+ Q.a.forEach((a,k)=>{h+=`<button class="ans ${Q.t==="tf"?"tf":""}" onclick="answer(${k})">${a}</button>`});
+ $.innerHTML=h+`<div class="fb" id="fb"></div></div>`;
+}
+function answer(k){
+ const Q=LEVELS[G.l].q[G.i],btns=[...document.querySelectorAll(".ans")],good=k===Q.ok;
+ btns.forEach((b,j)=>{b.disabled=true;if(j===Q.ok)b.classList.add("good");else if(j===k)b.classList.add("bad")});
+ if(good)G.score++;else G.lives--;
+ document.getElementById("fb").textContent=good?"Bravo ! 🎉":"Oups, la bonne réponse est en vert.";
+ setTimeout(()=>{
+  if(G.lives<=0)return end(false);
+  G.i++;if(G.i>=LEVELS[G.l].q.length)return end(true);question();
+ },1300);
+}
+function end(win){
+ let h="";
+ if(win){
+  const stars=G.lives,prev=save.stars[G.l]||0;if(stars>prev)save.stars[G.l]=stars;
+  save.unlocked=Math.max(save.unlocked,Math.min(G.l+2,LEVELS.length));
+  let newMon=-1;const m=G.l+1;if(m<MONSTERS.length&&!save.mons.includes(m)){save.mons.push(m);newMon=m}
+  persist();
+  h=`<h2>Niveau réussi !</h2><div class="card" style="text-align:center"><div style="font-size:42px">${"⭐".repeat(stars)}</div><p>${G.score} bonne(s) réponse(s) sur ${LEVELS[G.l].q.length}</p>
+  ${newMon>=0?`<p><b>Nouveau monstre : ${MONSTERS[newMon].n} !</b></p><div class="big pop">${monster(newMon)}</div>`:`<div class="big pop">${monster(G.l)}</div>`}</div>
+  ${G.l+1<LEVELS.length?`<button class="btn" onclick="start(${G.l+1})">Niveau suivant</button>`:`<p class="sub"><b>Tu as terminé tous les niveaux !</b> D'autres arrivent bientôt.</p>`}
+  <button class="btn blue" onclick="levels()">Choisir un niveau</button>`;
+ }else{
+  h=`<h2>Oh non…</h2><div class="card" style="text-align:center"><div class="big">${monster(G.l,"sad")}</div><p>Plus de cœurs ! Courage, tu peux réessayer.</p></div>
+  <button class="btn" onclick="start(${G.l})">Réessayer</button><button class="btn blue" onclick="levels()">Choisir un niveau</button>`;
+ }
+ $.innerHTML=h;
+}
+function collection(){
+ let h=`<div class="top"><button class="btn small gray" onclick="home()">← Retour</button></div><h2>Ma collection</h2><div class="grid">`;
+ MONSTERS.forEach((m,i)=>{const has=save.mons.includes(i);h+=`<div class="card mon ${has?"":"off"}">${monster(i)}<b>${has?m.n:"???"}</b></div>`});
+ $.innerHTML=h+`</div><div class="sub" style="margin-top:16px">Réussis les niveaux pour débloquer de nouveaux monstres.</div>`;
+}
+home();
+</script>
+</body>
+</html>
